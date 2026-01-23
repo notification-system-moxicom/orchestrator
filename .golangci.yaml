@@ -1,0 +1,169 @@
+# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.jsonschema.json
+version: "2"
+run:
+  modules-download-mode: mod
+  tests: false
+linters:
+  default: none
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - copyloopvar
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - embeddedstructfieldcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - goheader
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - govet
+    - grouper
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - lll
+    - makezero
+    - mirror
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nlreturn
+    - noctx
+    - noctx
+    - nosprintfhostport
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - reassign
+    - recvcheck
+    - revive
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - testableexamples
+    - testifylint
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wsl_v5
+  #    - contextcheck # интересный линтер, надо подумать
+  #    - errchkjson # интересный линтер, надо подумать
+  #    - forcetypeassert # хороший линтер, включим после рефакторинга herald
+  #    - funcorder # хороший линтер, включим после рефакторинга herald
+  #    - intrange # добавим позже
+  #    - maintidx # хороший линтер, включим после рефакторинга herald
+  #    - nilnil # добавим позже
+  #    - nolintlint # хороший линтер, включим после рефакторинга herald
+  #    - protogetter # хороший линтер, включим после рефакторинга herald
+  #    - rowserrcheck # хороший линтер, включим после рефакторинга herald
+  #    - tagalign # хороший линтер, включим после рефакторинга herald
+  settings:
+    recvcheck:
+      disable-builtin: false
+      exclusions:
+        - "*.Value"
+    gosec:
+      excludes:
+        - G115
+    nlreturn:
+      block-size: 2
+    revive:
+      rules:
+        - name: var-naming
+          severity: warning
+          disabled: false
+          arguments:
+            - [  ] # AllowList
+            - [  ] # DenyList
+            - - skip-package-name-checks: true
+    dupl:
+      threshold: 200
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocritic:
+      enable-all: true
+      disabled-checks:
+        - wrapperFunc
+        - hugeParam
+    cyclop:
+      max-complexity: 20
+    govet:
+      enable-all: true
+      disable:
+        - printf
+        - fieldalignment
+        - shadow
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: true
+      branch-max-lines: 4
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling
+    paths:
+      - configs
+      - templates
+      - migrations
+severity:
+  default: error
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(gitlab.services.mts.ru)
+        - prefix(gitlab.services.mts.ru/servicedesk)
+        - prefix(gitlab.services.mts.ru/servicedesk/golib)
+        - localmodule
+      custom-order: true
+    golines:
+      max-len: 200
+  exclusions:
+    generated: lax
+    paths:
+      - configs
+      - templates
+      - migrations

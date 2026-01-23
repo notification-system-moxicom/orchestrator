@@ -1,0 +1,44 @@
+title: &title orchestrator
+
+settings:
+  contract_version: "1.0.0"
+  operations_topics:
+    send_notification_topic: send-notification-orchestrator
+
+  action_execution_timeout: "30s"
+
+server:
+    http:
+        address: ":8080" # [ЗАМЕНИТЬ]
+
+integrations:
+  rpc:
+    # TODO:
+    # add info service later
+    #
+
+connections:
+  kafka:
+    orchestrator:
+      brokers:
+        - "127.0.0.1:9092"
+      consumer_group: "api-gateway-consumer-group" # [ЗАМЕНИТЬ]
+      consumer_workers_count: 10
+      retry:
+        net_timeout: 3s
+        dial_timeout: 5s
+        max_retries: 3
+        initial_backoff: 1s
+        max_backoff: 60s
+        backoff_multiplier: 2
+        max_reconnect_tries: 0 # [ЗАМЕНИТЬ] если 0 - то не ограничивается
+      health_check_timeout: 30s
+      auth:
+        enable_auth: false
+        mechanism: "SCRAM-SHA-512" # "PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"
+        username: "KAFKA_USERNAME"
+        password: "KAFKA_PASSWORD_ENC"
+        certificate: "KAFKA_CA_ENC"
+
+telemetry:
+  # add telemetry config later

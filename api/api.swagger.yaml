@@ -1,0 +1,282 @@
+openapi: 3.0.0
+info:
+  title: API Gateway
+  description: Service for linking with Grist API
+  version: 1.0.0
+  contact:
+    name: grid-grist-link-m4d service
+servers:
+  - url: http://{serviceHost}/{basePath}
+    description: hosted
+    variables:
+      basePath:
+        default: api/api-gateway/v1
+      serviceHost:
+        default: localhost:8080
+  - url: http://localhost:80/{basePath}
+    description: local-dev
+    variables:
+      basePath:
+        default: api/grid-grist-link-m4d/v1
+
+paths:
+  /systems:
+    post:
+      tags:
+        - systems
+      operationId: postSystems
+      summary: Create new system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostSystemReq'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/System'
+          description: created successfully
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: internal server error
+    get:
+      tags:
+        - systems
+      operationId: getSystems
+      summary: Get systems
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Systems'
+          description: Systems
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal server error
+  /systems/{system_id}/users:
+    post:
+      tags:
+        - users
+      operationId: add user
+      summary: Add user
+      parameters:
+        - name: system_id
+          in: path
+          required: true
+          description: System ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUserReq'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Systems
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal server error
+    get:
+      tags:
+        - users
+      operationId: get users
+      summary: Get users
+      parameters:
+        - name: system_id
+          in: path
+          required: true
+          description: System ID
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+          description: Systems
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal server error
+
+  /systems/{system_id}/notify:
+    post:
+      tags:
+        - notifications
+      operationId: notify
+      summary: Notify
+      parameters:
+        - name: system_id
+          in: path
+          required: true
+          description: System ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationBody'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoMessage'
+          description: Systems
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal server error
+
+components:
+  schemas:
+    InfoMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          description: info description
+          example: operation has received
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: error description
+          example: failed to create system
+##############################################################################################################
+##############################################################################################################
+    System:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+        deleted_at:
+          type: integer
+    PostSystemReq:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    Systems:
+      type: object
+      properties:
+        systems:
+          type: array
+          items:
+            $ref: '#/components/schemas/System'
+##############################################################################################################
+##############################################################################################################
+    Adapter:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "email@example.com"
+        phone:
+          type: string
+          example: "+73330001188"
+        telegram_chat_id:
+          type: string
+          example: "1942345987"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: internal id
+        id_at_system:
+          type: string
+          description: id from system
+        adapters:
+          $ref: '#/components/schemas/Adapter'
+    Users:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PostUserReq:
+      type: object
+      properties:
+        id_at_system:
+          type: string
+          description: id from system
+        adapters:
+          $ref: '#/components/schemas/Adapter'
+##############################################################################################################
+##############################################################################################################
+    NotificationBody:
+      type: object
+      properties:
+        users:
+          type: array
+          description: system's ids
+          items:
+            type: string
+        adapters:
+          $ref: '#/components/schemas/Adapter'
