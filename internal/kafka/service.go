@@ -33,14 +33,7 @@ const (
 	defaultBackoffMultiplier = 2.0
 	defaultMaxReconnectTries = 0 // 0 means unlimited
 
-	StartProcessConsumer        = "start-process"
-	CreateServiceTaskConsumer   = "create-service-task-consumer"
-	FileUploadResultConsumer    = "file-upload-result-consumer"
-	RequestActionsConsumer      = "request-actions-consumer"
-	FallbackConsumer            = "fallback-consumer"
-	DelegatesResponseConsumer   = "delegates-response-consumer"
-	CreateUserTaskConsumer      = "create-user-task-consumer"
-	GroupLoginsResponseConsumer = "group-logins-response-consumer"
+	SendNotificationConsumer = "send-notification-consumer"
 )
 
 type Config struct {
@@ -132,24 +125,12 @@ func NewService(
 	}
 
 	consumers := make(map[string]sarama.ConsumerGroup)
-	//
-	// EXAMPLE OF ADDING CONSUMER GROUP
-	//
-	//startProcessConsumer, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.ConsumerGroup, saramaCfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create consumer group: %w", err)
-	//}
-	//
-	//createServiceTaskConsumer, err := sarama.NewConsumerGroup(
-	//	cfg.Brokers,
-	//	cfg.ConsumerGroup,
-	//	saramaCfg,
-	//)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create consumer group: %w", err)
-	//}
+	sendNotificationConsumer, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.ConsumerGroup, saramaCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create consumer group: %w", err)
+	}
 
-	//consumers[StartProcessConsumer] = startProcessConsumer
+	consumers[SendNotificationConsumer] = sendNotificationConsumer
 
 	return &Service{
 		serviceConfig: cfg,
@@ -349,7 +330,7 @@ func (s *Service) StartConsumer(
 				)
 
 				reconnectInfo := "reconnecting in " + backoff.String() + " seconds (attempt " + strconv.Itoa(attempt) + ")"
-				slog.Warn("error from consumer ", consumerKey, err, "reconnect", reconnectInfo)
+				slog.Warn("error from consumer " + consumerKey + err.Error() + " reconnect " + reconnectInfo)
 				// Wait for backoff duration or until context is canceled or service is closed
 				select {
 				case <-time.After(backoff):

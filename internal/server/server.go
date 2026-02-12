@@ -37,10 +37,14 @@ type Server struct {
 	handlers   HTTPHandlers
 }
 
-func NewServer(h HTTPHandlers) *Server {
-	return &Server{
+func NewServer(cfg Config, h HTTPHandlers) *Server {
+	s := &Server{
 		handlers: h,
 	}
+
+	s.AddHTTPServer(cfg)
+
+	return s
 }
 
 func (s *Server) AddHTTPServer(c Config) {
@@ -76,6 +80,7 @@ func (s *Server) Run() {
 
 	// Start HTTP server in a goroutine
 	go func() {
+		slog.Info("Starting HTTP server on ", slog.String("address", s.httpServer.Addr))
 		if err := s.httpServer.ListenAndServe(); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 			} else {

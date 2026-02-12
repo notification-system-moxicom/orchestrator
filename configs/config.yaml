@@ -3,13 +3,13 @@ title: &title orchestrator
 settings:
   contract_version: "1.0.0"
   operations_topics:
-    send_notification_topic: send-notification-orchestrator
+    send_notification_orchestration: send-notification-orchestrator
 
   action_execution_timeout: "30s"
 
 server:
     http:
-        address: ":8080" # [ЗАМЕНИТЬ]
+        address: ":8081" # [ЗАМЕНИТЬ]
 
 integrations:
   rpc:
@@ -19,10 +19,10 @@ integrations:
 
 connections:
   kafka:
-    orchestrator:
+    gateway:
       brokers:
         - "127.0.0.1:9092"
-      consumer_group: "api-gateway-consumer-group" # [ЗАМЕНИТЬ]
+      consumer_group: "orchestrator-consumer-group" # [ЗАМЕНИТЬ]
       consumer_workers_count: 10
       retry:
         net_timeout: 3s

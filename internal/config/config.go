@@ -14,7 +14,7 @@ type Config struct {
 	Integrations Integrations   `yaml:"integrations"`
 	Connections  struct {
 		Kafka struct {
-			CamundaCore kafka.Config `yaml:"orchestrator"`
+			Gateway kafka.Config `yaml:"gateway"`
 		} `yaml:"kafka"`
 	} `yaml:"connections"`
 	Telemetry struct {
