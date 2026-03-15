@@ -25,6 +25,7 @@ type Config struct {
 type SettingsConfig struct {
 	ContractVersion  string            `yaml:"contract_version"`
 	OperationsTopics map[string]string `yaml:"operations_topics"`
+	AdapterTopics    map[string]string `yaml:"adapter_topics"`
 }
 
 type Integrations struct {

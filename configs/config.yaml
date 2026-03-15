@@ -3,7 +3,11 @@ title: &title orchestrator
 settings:
   contract_version: "1.0.0"
   operations_topics:
-    send_notification_orchestration: send-notification-orchestrator
+    send_notification_orchestration: notifications.incoming
+  adapter_topics:
+    sms: deliveries.sms
+    email: deliveries.email
+    telegram: deliveries.telegram
 
   action_execution_timeout: "30s"
 

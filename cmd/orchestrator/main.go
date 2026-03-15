@@ -29,7 +29,7 @@ func main() {
 	}
 
 	schemaFiles := map[string]string{
-		"notification_message": "schemas/send_notification.json",
+		"NotificationMessage": "schemas/send_notification.json",
 	}
 	validator, err := validation.NewJSONSchemaMessageValidator(schemaFiles)
 	if err != nil {
@@ -43,7 +43,7 @@ func main() {
 		return
 	}
 
-	apiGatewayHandler := gateway.NewHanler(gatewayKafka, cfg.Settings.OperationsTopics)
+	apiGatewayHandler := gateway.NewHanler(gatewayKafka, cfg.Settings.OperationsTopics, cfg.Settings.AdapterTopics, validator)
 	apiGatewayHandler.StartConsumer(ctx, cfg.Connections.Kafka.Gateway.ConsumerWorkersCount)
 
 	defer func() {
