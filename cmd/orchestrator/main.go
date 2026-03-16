@@ -9,6 +9,9 @@ import (
 	"github.com/notification-system-moxicom/orchestrator/internal/http/handlers"
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/gateway"
+	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/receipt"
+	"github.com/notification-system-moxicom/orchestrator/internal/persistence"
+	"github.com/notification-system-moxicom/orchestrator/internal/scenario"
 	"github.com/notification-system-moxicom/orchestrator/internal/server"
 	"github.com/notification-system-moxicom/orchestrator/internal/validation"
 	"github.com/notification-system-moxicom/orchestrator/pkg/logger"
@@ -30,6 +33,7 @@ func main() {
 
 	schemaFiles := map[string]string{
 		"NotificationMessage": "schemas/send_notification.json",
+		"DeliveryReceipt":     "schemas/delivery_receipt.json",
 	}
 	validator, err := validation.NewJSONSchemaMessageValidator(schemaFiles)
 	if err != nil {
@@ -37,14 +41,61 @@ func main() {
 		return
 	}
 
+	persistenceClient, err := persistence.NewClient(persistence.ClientConfig{
+		Address:        cfg.Integrations.RPC.Persistence.Address,
+		RequestTimeout: cfg.Integrations.RPC.Persistence.RequestTimeout,
+	})
+	if err != nil {
+		slog.Error("failed to create persistence client:", slog.String("error", err.Error()))
+		return
+	}
+
+	defer func() {
+		slog.Info("Closing persistence client...")
+		if err := persistenceClient.Close(); err != nil {
+			slog.Error("Error closing persistence client: ", err)
+		}
+	}()
+
 	gatewayKafka, err := kafka.NewService(&cfg.Connections.Kafka.Gateway, validator)
 	if err != nil {
 		slog.Error("failed to create Kafka service:", slog.String("error", err.Error()))
 		return
 	}
 
-	apiGatewayHandler := gateway.NewHanler(gatewayKafka, cfg.Settings.OperationsTopics, cfg.Settings.AdapterTopics, validator)
+	scheduler := scenario.NewScheduler()
+
+	apiGatewayHandler := gateway.NewHanler(
+		gatewayKafka,
+		cfg.Settings.OperationsTopics,
+		cfg.Settings.AdapterTopics,
+		cfg.Settings.DLQTopics.Deliveries,
+		validator,
+		persistenceClient,
+		cfg.Settings.ReceiptTopic,
+		scheduler,
+	)
 	apiGatewayHandler.StartConsumer(ctx, cfg.Connections.Kafka.Gateway.ConsumerWorkersCount)
+
+	if cfg.Settings.ReceiptTopic != "" {
+		receiptHandler := receipt.NewHandler(
+			gatewayKafka,
+			cfg.Settings.ReceiptTopic,
+			cfg.Settings.DLQTopics.Callbacks,
+			validator,
+			persistenceClient,
+			scheduler,
+		)
+		gatewayKafka.StartConsumer(
+			ctx,
+			kafka.DeliveryReceiptConsumer,
+			[]string{cfg.Settings.ReceiptTopic},
+			receiptHandler,
+			cfg.Connections.Kafka.Gateway.ConsumerWorkersCount,
+		)
+	} else {
+		slog.Warn("receipt topic is not configured, callbacks consumer disabled")
+	}
 
 	defer func() {
 		slog.Info("Closing gatewayKafka Kafka producer...")

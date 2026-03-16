@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["notification_id", "system_id", "user_ids", "channels"],
+  "required": ["notification_id", "system_id", "user_ids", "channels", "content"],
   "properties": {
     "notification_id": { "type": "string", "minLength": 1 },
     "system_id": { "type": "string", "minLength": 1 },
@@ -14,6 +14,26 @@
       "type": "array",
       "items": { "type": "string", "enum": ["sms", "email", "telegram"] },
       "minItems": 1
+    },
+    "content": { "type": "string", "minLength": 1 },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["channel", "delay_ms"],
+            "properties": {
+              "channel": { "type": "string", "enum": ["sms", "email", "telegram"] },
+              "delay_ms": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

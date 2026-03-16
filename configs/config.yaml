@@ -8,6 +8,13 @@ settings:
     sms: deliveries.sms
     email: deliveries.email
     telegram: deliveries.telegram
+  receipt_topic: delivery.receipts
+  dlq_topics:
+    callbacks: callbacks.dlq
+    deliveries:
+      sms: deliveries.sms.dlq
+      email: deliveries.email.dlq
+      telegram: deliveries.telegram.dlq
 
   action_execution_timeout: "30s"
 
@@ -17,9 +24,9 @@ server:
 
 integrations:
   rpc:
-    # TODO:
-    # add info service later
-    #
+    persistence:
+      address: ":9090"
+      request_timeout: "10s"
 
 connections:
   kafka:
