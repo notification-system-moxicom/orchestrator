@@ -34,6 +34,7 @@ const (
 	defaultMaxReconnectTries = 0 // 0 means unlimited
 
 	SendNotificationConsumer = "send-notification-consumer"
+	DeliveryReceiptConsumer  = "delivery-receipt-consumer"
 )
 
 type Config struct {
@@ -131,6 +132,13 @@ func NewService(
 	}
 
 	consumers[SendNotificationConsumer] = sendNotificationConsumer
+
+	deliveryReceiptConsumer, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.ConsumerGroup, saramaCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create delivery receipt consumer group: %w", err)
+	}
+
+	consumers[DeliveryReceiptConsumer] = deliveryReceiptConsumer
 
 	return &Service{
 		serviceConfig: cfg,

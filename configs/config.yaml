@@ -3,7 +3,18 @@ title: &title orchestrator
 settings:
   contract_version: "1.0.0"
   operations_topics:
-    send_notification_orchestration: send-notification-orchestrator
+    send_notification_orchestration: notifications.incoming
+  adapter_topics:
+    sms: deliveries.sms
+    email: deliveries.email
+    telegram: deliveries.telegram
+  receipt_topic: delivery.receipts
+  dlq_topics:
+    callbacks: callbacks.dlq
+    deliveries:
+      sms: deliveries.sms.dlq
+      email: deliveries.email.dlq
+      telegram: deliveries.telegram.dlq
 
   action_execution_timeout: "30s"
 
@@ -13,9 +24,9 @@ server:
 
 integrations:
   rpc:
-    # TODO:
-    # add info service later
-    #
+    persistence:
+      address: ":9090"
+      request_timeout: "10s"
 
 connections:
   kafka:
@@ -39,6 +50,12 @@ connections:
         username: "KAFKA_USERNAME"
         password: "KAFKA_PASSWORD_ENC"
         certificate: "KAFKA_CA_ENC"
+  redis:
+    address: "127.0.0.1:6379"
+    password: ""
+    db: 0
+    pool_size: 10
+    scenario_poll_interval: 500ms
 
 telemetry:
   # add telemetry config later
