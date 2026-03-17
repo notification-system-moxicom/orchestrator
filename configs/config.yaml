@@ -50,6 +50,12 @@ connections:
         username: "KAFKA_USERNAME"
         password: "KAFKA_PASSWORD_ENC"
         certificate: "KAFKA_CA_ENC"
+  redis:
+    address: "127.0.0.1:6379"
+    password: ""
+    db: 0
+    pool_size: 10
+    scenario_poll_interval: 500ms
 
 telemetry:
   # add telemetry config later

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
+	rediscfg "github.com/notification-system-moxicom/orchestrator/internal/redis"
 	"github.com/notification-system-moxicom/orchestrator/internal/server"
 	"gopkg.in/yaml.v3"
 )
@@ -13,10 +14,11 @@ type Config struct {
 	Settings     SettingsConfig `yaml:"settings"`
 	Server       server.Config  `yaml:"server"`
 	Integrations Integrations   `yaml:"integrations"`
-	Connections  struct {
+	Connections struct {
 		Kafka struct {
 			Gateway kafka.Config `yaml:"gateway"`
 		} `yaml:"kafka"`
+		Redis rediscfg.Config `yaml:"redis"`
 	} `yaml:"connections"`
 	Telemetry struct {
 		// May add later here telemetry configs

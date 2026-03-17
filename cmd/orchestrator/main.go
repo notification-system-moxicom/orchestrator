@@ -11,6 +11,7 @@ import (
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/gateway"
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/receipt"
 	"github.com/notification-system-moxicom/orchestrator/internal/persistence"
+	redisclient "github.com/notification-system-moxicom/orchestrator/internal/redis"
 	"github.com/notification-system-moxicom/orchestrator/internal/scenario"
 	"github.com/notification-system-moxicom/orchestrator/internal/server"
 	"github.com/notification-system-moxicom/orchestrator/internal/validation"
@@ -63,8 +64,21 @@ func main() {
 		return
 	}
 
-	scheduler := scenario.NewScheduler()
+	// Redis connection for scenario scheduler
+	rdb, err := redisclient.NewClient(cfg.Connections.Redis)
+	if err != nil {
+		slog.Error("failed to create Redis client:", slog.String("error", err.Error()))
+		return
+	}
+	defer func() {
+		slog.Info("Closing Redis client...")
+		if err := rdb.Close(); err != nil {
+			slog.Error("Error closing Redis client:", slog.String("error", err.Error()))
+		}
+	}()
 
+	// The gateway handler acts as the DeliveryTaskSender for the scheduler.
+	// We create the handler first, then pass it to the scheduler.
 	apiGatewayHandler := gateway.NewHanler(
 		gatewayKafka,
 		cfg.Settings.OperationsTopics,
@@ -73,8 +87,16 @@ func main() {
 		validator,
 		persistenceClient,
 		cfg.Settings.ReceiptTopic,
-		scheduler,
+		nil, // scheduler will be set below
 	)
+
+	scheduler := scenario.NewScheduler(rdb, cfg.Connections.Redis.ScenarioPollInterval, apiGatewayHandler)
+	scheduler.StartPoller(ctx)
+	defer scheduler.Stop()
+
+	// Wire the scheduler back into the handler
+	apiGatewayHandler.SetScheduler(scheduler)
+
 	apiGatewayHandler.StartConsumer(ctx, cfg.Connections.Kafka.Gateway.ConsumerWorkersCount)
 
 	if cfg.Settings.ReceiptTopic != "" {
@@ -122,3 +144,4 @@ func main() {
 	srv := server.NewServer(cfg.Server, httpHandlers)
 	srv.Run()
 }
+

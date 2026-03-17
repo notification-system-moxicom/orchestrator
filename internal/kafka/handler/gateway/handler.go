@@ -51,6 +51,12 @@ func NewHanler(
 	}
 }
 
+// SetScheduler sets the scheduler after construction. This is needed
+// to resolve the circular dependency: Handler → Scheduler → Handler.
+func (h *Handler) SetScheduler(s *scenario.Scheduler) {
+	h.scheduler = s
+}
+
 func (h *Handler) HandleMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
 	var payload message.NotificationMessage
 	if err := json.Unmarshal(msg.Value, &payload); err != nil {
@@ -120,10 +126,7 @@ func (h *Handler) HandleMessage(ctx context.Context, msg *sarama.ConsumerMessage
 		}
 
 		if payload.Scenario != nil && len(payload.Scenario.Steps) > 0 && h.scheduler != nil {
-			sendStep := func(step message.ScenarioStep) error {
-				return h.sendDeliveryTask(payload, internalUserID, recipientByChannel, step.Channel)
-			}
-			h.scheduler.StartScenario(payload.NotificationId, payload.SystemId, internalUserID, payload.Scenario.Steps, sendStep)
+			h.scheduler.StartScenario(payload.NotificationId, payload.SystemId, internalUserID, payload.Scenario.Steps)
 			continue
 		}
 
@@ -165,6 +168,81 @@ func uniqueStrings(values []string) []string {
 	return out
 }
 
+// SendDeliveryTask implements scenario.DeliveryTaskSender.
+// It resolves the user's contact for the given channel and produces
+// a DeliveryTask to the appropriate adapter Kafka topic.
+func (h *Handler) SendDeliveryTask(ctx context.Context, notificationID, systemID, userID, channel string) error {
+	topic, ok := h.adapterTopics[channel]
+	if !ok || topic == "" {
+		err := fmt.Errorf("no adapter topic for channel %s", channel)
+		slog.Error("missing adapter topic", "channel", channel)
+		h.sendToDeliveryDLQ(channel, "missing_topic", map[string]any{
+			"notification_id": notificationID,
+			"system_id":       systemID,
+			"user_id":         userID,
+			"channel":         channel,
+		}, err)
+		h.emitFailureReceipt(notificationID, systemID, userID, channel, err.Error())
+		return err
+	}
+
+	// Look up the user's contact info for the requested channel
+	usersResp, err := h.persistence.GetUsers(ctx, systemID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch users for scenario delivery: %w", err)
+	}
+
+	var recipient string
+	for _, u := range usersResp.GetUsers() {
+		if u.GetId() == userID {
+			adapters := u.GetAdapters()
+			if adapters != nil {
+				switch channel {
+				case "email":
+					recipient = adapters.GetEmail()
+				case "sms":
+					recipient = adapters.GetPhone()
+				case "telegram":
+					recipient = adapters.GetTelegramChatId()
+				}
+			}
+			break
+		}
+	}
+
+	if recipient == "" {
+		err := fmt.Errorf("missing recipient for channel %s", channel)
+		slog.Error("missing recipient", "channel", channel, "user_id", userID)
+		h.sendToDeliveryDLQ(channel, "missing_recipient", map[string]any{
+			"notification_id": notificationID,
+			"system_id":       systemID,
+			"user_id":         userID,
+			"channel":         channel,
+		}, err)
+		h.emitFailureReceipt(notificationID, systemID, userID, channel, err.Error())
+		return err
+	}
+
+	task := message.DeliveryTask{
+		NotificationId: notificationID,
+		SystemId:       systemID,
+		UserId:         userID,
+		Channel:        channel,
+		Recipient:      recipient,
+		Content:        "",
+		Subject:        "Notification",
+	}
+
+	if err := h.gatewayKafka.Produce(topic, task); err != nil {
+		h.sendToDeliveryDLQ(channel, "produce", task, err)
+		return err
+	}
+
+	return nil
+}
+
+// sendDeliveryTask is the internal version used during direct (non-scenario) message routing.
+// It uses the already-fetched recipientByChannel map.
 func (h *Handler) sendDeliveryTask(
 	payload message.NotificationMessage,
 	internalUserID string,
