@@ -39,7 +39,6 @@ const (
 type Config struct {
 	Brokers                []string      `yaml:"brokers"`
 	ConsumerGroup          string        `yaml:"consumer_group"`
-	ProducerTopics         []string      `yaml:"producer_topics"`
 	Retry                  RetryConfig   `yaml:"retry"`
 	HealthCheckTimeout     time.Duration `yaml:"health_check_timeout"`
 	ConsumerWorkersCount   int           `yaml:"consumer_workers_count"`
