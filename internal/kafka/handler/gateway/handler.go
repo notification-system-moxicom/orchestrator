@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/IBM/sarama"
+
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
 	"github.com/notification-system-moxicom/orchestrator/internal/types"
 )
@@ -71,12 +73,22 @@ func (h *Handler) processNotification(ctx context.Context, payload *types.SendNo
 	methods := resolveDeliveryMethods(payload)
 
 	for _, method := range methods {
+		eligibleUsers := filterUsersByMethod(payload.Users, string(method))
+
+		if len(eligibleUsers) == 0 {
+			slog.Info("no eligible users for method after filtering",
+				slog.String("method", string(method)),
+				slog.String("notification_id", payload.NotificationID),
+			)
+			continue
+		}
+
 		deliveryPayload := types.DeliveryPayload{
 			NotificationID: payload.NotificationID,
 			SystemID:       payload.SystemID,
 			Content:        content,
 			Method:         method,
-			Users:          payload.Users,
+			Users:          eligibleUsers,
 		}
 
 		topic, ok := h.operationsTopics[string(method)]
@@ -102,10 +114,103 @@ func (h *Handler) processNotification(ctx context.Context, payload *types.SendNo
 			slog.String("topic", topic),
 			slog.String("method", string(method)),
 			slog.String("notification_id", payload.NotificationID),
+			slog.Int("users_count", len(eligibleUsers)),
 		)
 	}
 
 	return nil
+}
+
+// filterUsersByMethod returns users who have the given method enabled (or have no subscriptions = all enabled)
+// and are not in quiet hours.
+func filterUsersByMethod(users []types.UserContact, method string) []types.UserContact {
+	var result []types.UserContact
+
+	for _, user := range users {
+		if !isMethodEnabledForUser(user, method) {
+			continue
+		}
+
+		if isInQuietHours(user) {
+			slog.Info("user in quiet hours, skipping",
+				slog.String("user", user.IDAtSystem),
+				slog.String("method", method),
+			)
+			continue
+		}
+
+		result = append(result, user)
+	}
+
+	return result
+}
+
+// isMethodEnabledForUser checks if the user has the given method enabled.
+// If no subscriptions are set, all methods are considered enabled (backwards compatible).
+func isMethodEnabledForUser(user types.UserContact, method string) bool {
+	if len(user.Subscriptions) == 0 {
+		return true
+	}
+
+	for _, sub := range user.Subscriptions {
+		if sub.Method == method {
+			return sub.Enabled
+		}
+	}
+
+	// Method not in subscriptions list = enabled by default
+	return true
+}
+
+// isInQuietHours checks if the current time falls within the user's quiet hours.
+func isInQuietHours(user types.UserContact) bool {
+	if user.QuietHours == nil || user.QuietHours.Start == "" || user.QuietHours.End == "" {
+		return false
+	}
+
+	tz := user.QuietHours.Timezone
+	if tz == "" {
+		tz = "UTC"
+	}
+
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		slog.Warn("invalid timezone for user, ignoring quiet hours",
+			slog.String("user", user.IDAtSystem),
+			slog.String("timezone", tz),
+		)
+		return false
+	}
+
+	now := time.Now().In(loc)
+	currentMinutes := now.Hour()*60 + now.Minute()
+
+	startMinutes, err := parseTimeMinutes(user.QuietHours.Start)
+	if err != nil {
+		return false
+	}
+
+	endMinutes, err := parseTimeMinutes(user.QuietHours.End)
+	if err != nil {
+		return false
+	}
+
+	// Handle overnight quiet hours (e.g., 22:00 - 08:00)
+	if startMinutes <= endMinutes {
+		return currentMinutes >= startMinutes && currentMinutes < endMinutes
+	}
+
+	return currentMinutes >= startMinutes || currentMinutes < endMinutes
+}
+
+// parseTimeMinutes parses "HH:MM" into total minutes since midnight.
+func parseTimeMinutes(t string) (int, error) {
+	parsed, err := time.Parse("15:04", t)
+	if err != nil {
+		return 0, err
+	}
+
+	return parsed.Hour()*60 + parsed.Minute(), nil
 }
 
 func resolveDeliveryMethods(payload *types.SendNotificationPayload) []types.DeliveryMethod {

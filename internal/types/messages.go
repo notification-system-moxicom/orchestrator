@@ -7,12 +7,28 @@ type SendMethods struct {
 	Telegram bool `json:"telegram,omitempty"`
 }
 
+// SubscriptionPayload holds a user's channel subscription preference.
+type SubscriptionPayload struct {
+	Method   string `json:"method"`
+	Enabled  bool   `json:"enabled"`
+	Priority int32  `json:"priority"`
+}
+
+// QuietHoursPayload holds a user's do-not-disturb settings.
+type QuietHoursPayload struct {
+	Start    string `json:"start"`
+	End      string `json:"end"`
+	Timezone string `json:"timezone"`
+}
+
 // UserContact holds a user's contact details for delivery.
 type UserContact struct {
-	IDAtSystem     string `json:"id_at_system"`
-	Email          string `json:"email,omitempty"`
-	Phone          string `json:"phone,omitempty"`
-	TelegramChatID string `json:"telegram_chat_id,omitempty"`
+	IDAtSystem     string                `json:"id_at_system"`
+	Email          string                `json:"email,omitempty"`
+	Phone          string                `json:"phone,omitempty"`
+	TelegramChatID string                `json:"telegram_chat_id,omitempty"`
+	Subscriptions  []SubscriptionPayload `json:"subscriptions,omitempty"`
+	QuietHours     *QuietHoursPayload    `json:"quiet_hours,omitempty"`
 }
 
 // ScenarioPayload carries scenario/template metadata.
