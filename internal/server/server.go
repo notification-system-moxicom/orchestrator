@@ -13,8 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-
-	"github.com/notification-system-moxicom/orchestrator/api"
 )
 
 const (
@@ -29,9 +27,10 @@ type Config struct {
 	} `yaml:"http"`
 }
 
-type HTTPHandlers interface {
-	api.ServerInterface
-}
+// HTTPHandlers is a stub interface — the original OpenAPI-generated
+// ServerInterface was removed when the API was deleted from this project.
+type HTTPHandlers interface{}
+
 type Server struct {
 	httpServer *http.Server
 	handlers   HTTPHandlers
@@ -62,8 +61,13 @@ func (s *Server) AddHTTPServer(c Config) {
 	mux.Use(middleware.SetHeader("Content-Type", applicationJSONContentType))
 	mux.Use(cors.Handler(corsOptions))
 
+	// API routes are stubbed out — the OpenAPI-generated api package was
+	// removed from this project. Re-introduce routes here when needed.
+	_ = s.handlers
 	mux.Route("/api/api-gateway/v1", func(r chi.Router) {
-		r.Mount("/", api.Handler(s.handlers)) // TODO: fixme. replace nil with s.handlers
+		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
 	})
 
 	s.httpServer = &http.Server{

@@ -4,6 +4,7 @@ type Operation string
 
 const (
 	OperationSendNotification Operation = "send_notification_orchestration"
+	OperationDeliveryStatus   Operation = "delivery_status"
 )
 
 type DeliveryMethod string

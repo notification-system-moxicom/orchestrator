@@ -60,3 +60,15 @@ type DeliveryPayload struct {
 	Method         DeliveryMethod `json:"method"`
 	Users          []UserContact  `json:"users"`
 }
+
+// DeliveryCallback is the unified callback message sent by all delivery adapters
+// to the delivery-status topic. The Channel field distinguishes which adapter sent it.
+type DeliveryCallback struct {
+	NotificationID string `json:"notification_id"`
+	SystemID       string `json:"system_id"`
+	UserIDAtSystem string `json:"user_id_at_system"`
+	Channel        string `json:"channel"` // "telegram", "email", "sms", "push"
+	Status         string `json:"status"`  // "sent", "failed"
+	ErrorMessage   string `json:"error_message,omitempty"`
+	DeliveredAt    int64  `json:"delivered_at"`
+}

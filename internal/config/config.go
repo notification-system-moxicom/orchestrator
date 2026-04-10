@@ -32,6 +32,9 @@ type Integrations struct {
 }
 
 type IntegrationsRPCConfig struct {
+	Persistence struct {
+		Address string `yaml:"address"`
+	} `yaml:"persistence"`
 }
 
 func ReadConfig(fileName string) (Config, error) {

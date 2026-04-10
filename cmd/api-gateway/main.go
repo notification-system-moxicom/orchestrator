@@ -4,11 +4,14 @@ import (
 	"context"
 	"flag"
 	"log/slog"
+	"time"
 
 	"github.com/notification-system-moxicom/orchestrator/internal/config"
 	"github.com/notification-system-moxicom/orchestrator/internal/http/handlers"
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
+	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/delivery"
 	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/gateway"
+	persistencev1 "github.com/notification-system-moxicom/orchestrator/internal/persistence"
 	"github.com/notification-system-moxicom/orchestrator/internal/server"
 	"github.com/notification-system-moxicom/orchestrator/internal/validation"
 	"github.com/notification-system-moxicom/orchestrator/pkg/logger"
@@ -45,6 +48,26 @@ func main() {
 
 	apiGatewayHandler := gateway.NewHanler(gatewayKafka, cfg.Settings.OperationsTopics)
 	apiGatewayHandler.StartConsumer(ctx, cfg.Connections.Kafka.Gateway.ConsumerWorkersCount)
+
+	// Persistence gRPC client for delivery status updates
+	persistenceClient, err := persistencev1.NewDeliveryStatusClient(
+		cfg.Integrations.RPC.Persistence.Address,
+		5*time.Second,
+	)
+	if err != nil {
+		slog.Error("failed to create persistence client:", slog.String("error", err.Error()))
+		return
+	}
+
+	defer func() {
+		if err := persistenceClient.Close(); err != nil {
+			slog.Error("Error closing persistence client: ", err)
+		}
+	}()
+
+	// Delivery status callback handler
+	deliveryHandler := delivery.NewHandler(gatewayKafka, persistenceClient, cfg.Settings.OperationsTopics)
+	deliveryHandler.StartConsumer(ctx, cfg.Connections.Kafka.Gateway.ConsumerWorkersCount)
 
 	defer func() {
 		slog.Info("Closing gatewayKafka Kafka producer...")

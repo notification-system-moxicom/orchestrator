@@ -13,19 +13,19 @@ settings:
 
 server:
     http:
-        address: ":8081" # [ЗАМЕНИТЬ]
+        address: ":8081"
 
 integrations:
   rpc:
     persistence:
-      address: ":9090"
+      address: "persistence-service:9090"
 
 connections:
   kafka:
     gateway:
       brokers:
-        - "127.0.0.1:9092"
-      consumer_group: "orchestrator-consumer-group" # [ЗАМЕНИТЬ]
+        - "kafka:29092"
+      consumer_group: "orchestrator-consumer-group"
       consumer_workers_count: 10
       retry:
         net_timeout: 3s
@@ -34,11 +34,11 @@ connections:
         initial_backoff: 1s
         max_backoff: 60s
         backoff_multiplier: 2
-        max_reconnect_tries: 0 # [ЗАМЕНИТЬ] если 0 - то не ограничивается
+        max_reconnect_tries: 0
       health_check_timeout: 30s
       auth:
         enable_auth: false
-        mechanism: "SCRAM-SHA-512" # "PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"
+        mechanism: "SCRAM-SHA-512"
         username: "KAFKA_USERNAME"
         password: "KAFKA_PASSWORD_ENC"
         certificate: "KAFKA_CA_ENC"
