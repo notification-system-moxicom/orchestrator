@@ -6,15 +6,15 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/config"
-	"github.com/notification-system-moxicom/orchestrator/internal/http/handlers"
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/delivery"
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka/handler/gateway"
-	persistencev1 "github.com/notification-system-moxicom/orchestrator/internal/persistence"
-	"github.com/notification-system-moxicom/orchestrator/internal/server"
-	"github.com/notification-system-moxicom/orchestrator/internal/validation"
-	"github.com/notification-system-moxicom/orchestrator/pkg/logger"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/config"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/http/handlers"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka/handler/delivery"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka/handler/gateway"
+	persistencev1 "gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/persistence"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/server"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/validation"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/pkg/logger"
 )
 
 func main() {

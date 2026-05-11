@@ -8,7 +8,7 @@ import (
 
 	"github.com/xeipuuv/gojsonschema"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/errors"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/errors"
 )
 
 //go:embed schemas/*.json

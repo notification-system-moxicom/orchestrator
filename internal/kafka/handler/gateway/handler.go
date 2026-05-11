@@ -10,8 +10,8 @@ import (
 
 	"github.com/IBM/sarama"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
-	"github.com/notification-system-moxicom/orchestrator/internal/types"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/types"
 )
 
 type Handler struct {

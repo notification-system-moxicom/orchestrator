@@ -8,9 +8,9 @@ import (
 
 	"github.com/IBM/sarama"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
-	persistencev1 "github.com/notification-system-moxicom/orchestrator/internal/persistence"
-	"github.com/notification-system-moxicom/orchestrator/internal/types"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka"
+	persistencev1 "gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/persistence"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/types"
 )
 
 // Handler processes DeliveryCallback messages from the delivery-status topic

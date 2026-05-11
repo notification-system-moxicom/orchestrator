@@ -1,4 +1,4 @@
-module github.com/notification-system-moxicom/orchestrator
+module gitlab.services.mts.ru/nm/notification-system/orchestrator
 
 go 1.25.4
 

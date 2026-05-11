@@ -3,8 +3,8 @@ package config
 import (
 	"os"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/kafka"
-	"github.com/notification-system-moxicom/orchestrator/internal/server"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/kafka"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/server"
 	"gopkg.in/yaml.v3"
 )
 

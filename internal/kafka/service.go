@@ -19,9 +19,9 @@ import (
 	"github.com/rcrowley/go-metrics"
 	"github.com/xdg-go/scram"
 
-	"github.com/notification-system-moxicom/orchestrator/internal/errors"
-	"github.com/notification-system-moxicom/orchestrator/internal/validation"
-	"github.com/notification-system-moxicom/orchestrator/pkg/util/generic"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/errors"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/internal/validation"
+	"gitlab.services.mts.ru/nm/notification-system/orchestrator/pkg/util/generic"
 )
 
 const (
