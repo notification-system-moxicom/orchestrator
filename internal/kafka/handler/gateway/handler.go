@@ -152,8 +152,12 @@ func isMethodEnabledForUser(user types.UserContact, method string) bool {
 		return true
 	}
 
+	// DeliveryMethod uses "delivery_email" format, subscriptions use "email" format.
+	// Normalize by stripping the "delivery_" prefix for comparison.
+	channel := strings.TrimPrefix(method, "delivery_")
+
 	for _, sub := range user.Subscriptions {
-		if sub.Method == method {
+		if sub.Method == channel {
 			return sub.Enabled
 		}
 	}
